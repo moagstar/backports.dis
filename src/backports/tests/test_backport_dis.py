@@ -37,6 +37,106 @@ def do_dis(object_to_test, module_to_use, stream=None):
             module_to_use.dis(object_to_test)
 
 
+def dump_to_disk(test_function, actual, expected):
+    """
+    Dump the actual and expected information to disk which can be useful for
+    determining why a test is failing
+
+    :param test_function: The function which returns the object to test.
+    :param actual: The result from the backport dis module.
+    :param expected: The result from the original dis module.
+    """
+    # change to if 1 to dump actual and expected output to disk
+    if 0:
+        with open(test_function.__name__ + '_actual', 'w') as a:
+            a.write(actual)
+        with open(test_function.__name__ + '_expected', 'w') as a:
+            a.write(expected)
+
+
+def get_backport(object_to_test):
+    """
+    Use the backport dis module to get the disassembled information about a
+    code object.
+
+    :param object_to_test: The object to pass to dis.
+
+    :return: String containing the disassmbled code.
+    """
+    stream = StringIO()
+    do_dis(object_to_test, backport, stream)
+    return stream.getvalue()
+
+
+def get_original(object_to_test):
+    """
+    Use the original dis module to get the disassembled information about a
+    code object.
+
+    :param object_to_test: The object to pass to dis.
+
+    :return: String containing the disassmbled code.
+    """
+    stream = StringIO()
+    stdout = sys.stdout
+    sys.stdout = stream
+    try:
+        if isinstance(object_to_test, types.GeneratorType):
+            object_to_test = object_to_test.gi_frame.f_code
+
+        # disassembly of strings seems pretty broken in python2 just compile
+        # the string to a code object and compare the result
+        if isinstance(object_to_test, str):
+            object_to_test = compile(object_to_test, '<dis>', 'exec')
+
+        do_dis(object_to_test, original)
+    finally:
+        sys.stdout = stdout
+
+    return stream.getvalue().strip()
+
+
+def normalize(output):
+    """
+    Normalize the output from the dis module to account for expected
+    differences between python 2 and python 3:
+
+        * Pointers in the string
+        * Addition of hasnargs
+
+    :param output: The output from the dis module.
+
+    :return: Normalized output.
+    """
+    # remove any code object addresses which will be different between
+    # expected and actual
+    regex = re.compile('code object function at [0-9A-F]{8}')
+    output = regex.sub('', output)
+
+    # remove (<n> positional, <n> keyword pair) which is not supported in
+    # python2
+    regex = re.compile('\([0-9]+ positional\, [0-9]+ keyword pair\)')
+    output = regex.sub('', output)
+
+    return output
+
+
+def compare(dis_output1, dis_output2):
+    """
+    Compare the output from two dis modules, taking into account the fact that
+    padding is different between python 2 and 3 so ignore whitespace when
+    comparing.
+
+    :param dis_output1: The output from the first dis module.
+    :param dis_output2: The output from the second dis module.
+    """
+    actual_lines = dis_output1.split('\n')
+    expected_lines = dis_output2.split('\n')
+    for actual_line, expected_line in zip(actual_lines, expected_lines):
+        if actual_line.replace(' ', '') != expected_line.replace(' ', ''):
+            assert dis_output1 == dis_output2
+
+
 def backport_dis_test(test_function):
     """
     Decorator which can be used to verify that the backport.dis module produces
@@ -50,59 +150,13 @@ def backport_dis_test(test_function):
 
     @wraps(test_function)
     def inner():
-
         object_to_test = test_function()
-
-        # use the backport dis module to get the actual value
-        stream = StringIO()
-        do_dis(object_to_test, backport, stream)
-        actual = stream.getvalue().strip()
-
-        # use original dis module to get the expected value
-        stream = StringIO()
-        stdout = sys.stdout
-        sys.stdout = stream
-        try:
-            if isinstance(object_to_test, types.GeneratorType):
-                object_to_test = object_to_test.gi_frame.f_code
-
-            # disassembly of strings seems pretty broken in python2 just compile
-            # the string to a code object and compare the result
-            if isinstance(object_to_test, str):
-                object_to_test = compile(object_to_test, '<dis>', 'exec')
-
-            do_dis(object_to_test, original)
-        finally:
-            sys.stdout = stdout
-
-        expected = stream.getvalue().strip()
-
-        # change to if 1 to dump actual and expected output to disk
-        if 0:
-            with open(test_function.__name__ + '_actual', 'w') as a:
-                a.write(actual)
-            with open(test_function.__name__ + '_expected', 'w') as a:
-                a.write(expected)
-
-        # remove any code object addresses which will be different between
-        # expected and actual
-        regex = re.compile('code object function at [0-9A-F]{8}')
-        actual = regex.sub('', actual)
-        expected = regex.sub('', expected)
-
-        # remove (<n> positional, <n> keyword pair) which is not supported in
-        # python2
-        regex = re.compile('\([0-9]+ positional\, [0-9]+ keyword pair\)')
-        actual = regex.sub('', actual)
-        expected = regex.sub('', expected)
-
-        # padding is different between python 2 and 3 so ignore whitespace
-        # when comparing
-        actual_lines = actual.split('\n')
-        expected_lines = expected.split('\n')
-        for actual_line, expected_line in zip(actual_lines, expected_lines):
-            if actual_line.replace(' ', '') != expected_line.replace(' ', ''):
-                assert actual == expected
+        actual = get_backport(object_to_test)
+        expected = get_original(object_to_test)
+        dump_to_disk(test_function, actual, expected)
+        actual = normalize(actual)
+        expected = normalize(expected)
+        compare(actual, expected)
 
     inner.test_function = test_function
 

@@ -1,5 +1,6 @@
 # std
 import sys
+import inspect
 import types
 import math
 import re
@@ -201,8 +202,9 @@ def test_show_code():
 
 def test_get_instructions():
     actual = list(backport.get_instructions(x for x in [1,2,3]))
+    starts_line = inspect.getframeinfo(inspect.currentframe()).lineno - 1
     expected = [
-       backport._Instruction(opname='LOAD_FAST', opcode=124, arg=0, argval='.0', argrepr='.0', offset=0, starts_line=203, is_jump_target=False),
+       backport._Instruction(opname='LOAD_FAST', opcode=124, arg=0, argval='.0', argrepr='.0', offset=0, starts_line=starts_line, is_jump_target=False),
        backport._Instruction(opname='FOR_ITER', opcode=93, arg=11, argval=17, argrepr='to 17', offset=3, starts_line=None, is_jump_target=True),
        backport._Instruction(opname='STORE_FAST', opcode=125, arg=1, argval='x', argrepr='x', offset=6, starts_line=None, is_jump_target=False),
        backport._Instruction(opname='LOAD_FAST', opcode=124, arg=1, argval='x', argrepr='x', offset=9, starts_line=None, is_jump_target=False),

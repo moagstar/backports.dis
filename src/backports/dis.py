@@ -4,7 +4,9 @@ from __future__ import print_function
 import sys
 import types
 import collections
-import io
+import contextlib
+import StringIO
+import marshal
 
 from opcode import *
 from opcode import __all__ as _opcodes_all
@@ -14,7 +16,8 @@ __all__ = ["code_info", "dis", "disassemble", "distb", "disco",
            "get_instructions", "Instruction", "Bytecode"] + _opcodes_all
 del _opcodes_all
 
-_have_code = (types.MethodType, types.FunctionType, types.CodeType, type)
+_have_code = (types.MethodType, types.FunctionType, types.CodeType,
+              classmethod, staticmethod, type)
 
 hasnargs = [131, 140, 141, 142]
 __all__ += [hasnargs]
@@ -28,9 +31,14 @@ def _try_compile(source, name):
        expect code objects
     """
     try:
-        c = compile(source, name, 'eval')
-    except SyntaxError:
-        c = compile(source, name, 'exec')
+        try:
+            c = compile(source, name, 'eval')
+        except SyntaxError:
+            c = compile(source, name, 'exec')
+    except TypeError:
+        # c is perhaps already a code object as a python2 str
+        c = source
+
     return c
 
 
@@ -483,7 +491,7 @@ class Bytecode:
             offset = self.current_offset
         else:
             offset = -1
-        with io.StringIO() as output:
+        with contextlib.closing(StringIO.StringIO()) as output:
             _disassemble_bytes(co.co_code, varnames=co.co_varnames,
                                names=co.co_names, constants=co.co_consts,
                                cells=self._cell_names,

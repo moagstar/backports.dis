@@ -166,6 +166,21 @@ def backport_dis_test(test_function):
 
 ########################## Backport vs Original Tests ##########################
 
+
+class Class:
+
+    def instance_method(self):
+        return 0
+
+    @staticmethod
+    def static_method():
+        return 0
+
+    @classmethod
+    def class_method(cls):
+        return 0
+
+
 @backport_dis_test
 def test_traceback():
     try:
@@ -175,11 +190,18 @@ def test_traceback():
 
 
 @backport_dis_test
-def test_method():
-    class Class:
-        def method(self):
-            return 0
-    return Class.method
+def test_instance_method():
+    return Class.instance_method
+
+
+@backport_dis_test
+def test_static_method():
+    return Class.static_method
+
+
+@backport_dis_test
+def test_class_method():
+    return Class.class_method
 
 
 @backport_dis_test
@@ -207,15 +229,59 @@ def test_function():
 
 
 @backport_dis_test
+def test_complex_function_1():
+    def outer(b, n, l):
+        def function(a, b=b, c=None, *args, **kwargs):
+            v = [x for x in args] + [(x, y) for x, y in kwargs.iteritems()]
+            print(v)
+            return v
+        yield function(math.pi, l, c=32, kwarg=n) + [n, l]
+    return outer
+
+
+@backport_dis_test
+def test_complex_function_2():
+    def function():
+        it = range(0, int(math.pi * 10))
+        for i, x in enumerate(it):
+            if x == 1:
+                next(it)
+            elif x / 2 == 1:
+                continue
+            elif i > 10:
+                break
+            else:
+                for i in xrange(2):
+                    next(it)
+                else:
+                    x += 1
+        else:
+            while not True:
+                break
+    return function
+
+
+@backport_dis_test
+def test_function_with_try():
+    def function():
+        try:
+            1 / 0
+        except:
+            raise RuntimeError()
+        else:
+            print('else')
+        finally:
+            print('finally')
+    return function
+
+
+@backport_dis_test
 def test_generator():
     return (x for x in 'backport.dis' if ord(x) < 24)
 
 
 @backport_dis_test
 def test_class():
-    class Class:
-        def method(self):
-            return 0
     return Class
 
 
@@ -292,10 +358,6 @@ def test_pretty_flags():
     assert backport.pretty_flags(1 | 4 | 32) == 'OPTIMIZED, VARARGS, GENERATOR'
     assert backport.pretty_flags(512 | 2048) == '0x200, 0x800'
     assert backport.pretty_flags(8589934592) == '0x200000000'  # 2^33
-
-
-def test_get_code_object():
-    raise NotImplementedError()
 
 
 def test_code_info_method():
@@ -443,10 +505,6 @@ Cell variables:
     expected = normalize(expected)
     actual = normalize(actual)
     assert actual == expected
-
-
-def test_format_code_info():
-    raise NotImplementedError()
 
 
 def test_show_code():

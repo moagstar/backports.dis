@@ -1,0 +1,41 @@
+ 51           0 LOAD_CONST               1 (0)
+              3 STORE_FAST               1 (@py_assert0)
+              6 LOAD_FAST                1 (@py_assert0)
+              9 POP_JUMP_IF_TRUE        98
+             12 LOAD_GLOBAL              0 (@pytest_ar)
+             15 LOAD_ATTR                1 (_format_assertmsg)
+             18 BUILD_LIST               0
+             21 LOAD_FAST                0 (x)
+             24 GET_ITER
+        >>   25 FOR_ITER                12 (to 40)
+             28 STORE_FAST               2 (s)
+             31 LOAD_FAST                2 (s)
+             34 LIST_APPEND              2
+             37 JUMP_ABSOLUTE           25
+        >>   40 LOAD_CONST               2 (1)
+             43 BINARY_ADD
+             44 CALL_FUNCTION            1 (1 positional, 0 keyword pair)
+             47 LOAD_CONST               3 ('\n>assert %(py1)s')
+             50 BINARY_ADD
+             51 BUILD_MAP                1
+             54 LOAD_GLOBAL              0 (@pytest_ar)
+             57 LOAD_ATTR                2 (_saferepr)
+             60 LOAD_FAST                1 (@py_assert0)
+             63 CALL_FUNCTION            1 (1 positional, 0 keyword pair)
+             66 LOAD_CONST               4 ('py1')
+             69 STORE_MAP
+             70 BINARY_MODULO
+             71 STORE_FAST               3 (@py_format2)
+             74 LOAD_GLOBAL              3 (AssertionError)
+             77 LOAD_GLOBAL              0 (@pytest_ar)
+             80 LOAD_ATTR                4 (_format_explanation)
+             83 LOAD_FAST                3 (@py_format2)
+             86 CALL_FUNCTION            1 (1 positional, 0 keyword pair)
+             89 CALL_FUNCTION            1 (1 positional, 0 keyword pair)
+             92 RAISE_VARARGS            1
+             95 JUMP_FORWARD             0 (to 98)
+        >>   98 LOAD_CONST               0 (None)
+            101 STORE_FAST               1 (@py_assert0)
+
+ 53         104 LOAD_CONST               0 (None)
+            107 RETURN_VALUE

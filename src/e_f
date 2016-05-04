@@ -1,0 +1,6 @@
+ 11           0 LOAD_FAST                0 (a)
+              3 PRINT_ITEM
+              4 PRINT_NEWLINE
+
+ 12           5 LOAD_CONST               1 (1)
+              8 RETURN_VALUE

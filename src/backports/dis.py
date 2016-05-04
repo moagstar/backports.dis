@@ -138,7 +138,12 @@ def _format_code_info(co):
         "Name:              %s" % co.co_name,
         "Filename:          %s" % co.co_filename,
         "Argument count:    %s" % co.co_argcount,
-        "Kw-only arguments: %s" % co.co_kwonlyargcount,
+    ]
+    if hasattr(co, 'co_kwonlyargcount'):
+        lines += [
+            "Kw-only arguments: %s" % co.co_kwonlyargcount,
+        ]
+    lines += [
         "Number of locals:  %s" % co.co_nlocals,
         "Stack size:        %s" % co.co_stacksize,
         "Flags:             %s" % pretty_flags(co.co_flags),

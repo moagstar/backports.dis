@@ -111,7 +111,7 @@ def normalize(output):
     """
     # remove any code object addresses which will be different between
     # expected and actual
-    regex = re.compile('code object function at (0x)?[0-9A-Fa-f]*')
+    regex = re.compile('code object [^ ]* at (0x)?[0-9A-Fa-f]*')
     output = regex.sub('', output)
 
     # remove (<n> positional, <n> keyword pair) which is not supported in
@@ -264,7 +264,6 @@ def test_no_last_traceback():
             perform_last_traceback_test()
 
 
-
 ############################# Test Misc Functions ##############################
 
 def test_unknown():
@@ -282,8 +281,107 @@ def test_get_code_object():
     raise NotImplementedError()
 
 
-def test_code_info():
-    raise NotImplementedError()
+def test_code_info_method():
+    class Class:
+        def method(self):
+            return None
+    file = __file__
+    expected = '''Name:              method
+Filename:          {file}
+Argument count:    1
+Number of locals:  1
+Stack size:        1
+Flags:             OPTIMIZED, NEWLOCALS, NESTED, NOFREE
+Constants:
+   0: None
+Names:
+   0: None
+Variable names:
+   0: self'''.format(**locals())
+    actual = backport.code_info(Class.method)
+    assert actual == expected
+
+
+def test_code_info_function():
+    def function(param):
+        return None
+    file = __file__
+    expected = '''Name:              function
+Filename:          {file}
+Argument count:    1
+Number of locals:  1
+Stack size:        1
+Flags:             OPTIMIZED, NEWLOCALS, NESTED, NOFREE
+Constants:
+   0: None
+Names:
+   0: None
+Variable names:
+   0: param'''.format(**locals())
+    actual = backport.code_info(function)
+    assert actual == expected
+
+
+def test_code_info_generator():
+    generator = (x for x in 'backports.dis')
+    file = __file__
+    expected = '''Name:              <genexpr>
+Filename:          {file}
+Argument count:    1
+Number of locals:  2
+Stack size:        2
+Flags:             OPTIMIZED, NEWLOCALS, NESTED, GENERATOR, NOFREE
+Constants:
+   0: None
+Variable names:
+   0: .0
+   1: x'''.format(**locals())
+    actual = backport.code_info(generator)
+    assert actual == expected
+
+
+def test_code_info_source_code():
+    source_code = '(x for x in "backports.dis")'
+    file = __file__
+    expected = """Name:              <module>
+Filename:          <disassembly>
+Argument count:    0
+Number of locals:  0
+Stack size:        2
+Flags:             NOFREE, 0x10000
+Constants:
+   0: <, file "<disassembly>", line 1>
+   1: 'backports.dis'"""
+    actual = backport.code_info(source_code)
+    expected = normalize(expected)
+    actual = normalize(actual)
+    assert actual == expected
+
+
+def test_code_info_code_object():
+    source_code = compile('(x for x in "backports.dis")', '<str>', 'exec')
+    file = __file__
+    expected = """Name:              <module>
+Filename:          <str>
+Argument count:    0
+Number of locals:  0
+Stack size:        2
+Flags:             NOFREE
+Constants:
+   0: <, file "<str>", line 1>
+   1: 'backports.dis'
+   2: None"""
+    actual = backport.code_info(source_code)
+    expected = normalize(expected)
+    actual = normalize(actual)
+    with open('a', 'w') as f: f.write(actual)
+    with open('e', 'w') as f: f.write(expected)
+    assert actual == expected
+
+
+def test_code_info_type_error():
+    with pytest.raises(TypeError):
+        backport.code_info(math.pi)
 
 
 def test_format_code_info():

@@ -1,0 +1,1 @@
+py.test -vvv --cov=backports.dis --cov-report term-missing

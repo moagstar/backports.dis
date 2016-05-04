@@ -89,6 +89,12 @@ def backport_dis_test(test_function):
         actual = regex.sub('', actual)
         expected = regex.sub('', expected)
 
+        # remove (<n> positional, <n> keyword pair) which is not supported in
+        # python2
+        regex = re.compile('\([0-9]+ positional\, [0-9]+ keyword pair\)')
+        actual = regex.sub('', actual)
+        expected = regex.sub('', expected)
+
         # padding is different between python 2 and 3 so ignore whitespace
         # when comparing
         actual_lines = actual.split('\n')
@@ -196,7 +202,7 @@ def test_show_code():
 def test_get_instructions():
     actual = list(backport.get_instructions(x for x in [1,2,3]))
     expected = [
-       backport._Instruction(opname='LOAD_FAST', opcode=124, arg=0, argval='.0', argrepr='.0', offset=0, starts_line=197, is_jump_target=False),
+       backport._Instruction(opname='LOAD_FAST', opcode=124, arg=0, argval='.0', argrepr='.0', offset=0, starts_line=203, is_jump_target=False),
        backport._Instruction(opname='FOR_ITER', opcode=93, arg=11, argval=17, argrepr='to 17', offset=3, starts_line=None, is_jump_target=True),
        backport._Instruction(opname='STORE_FAST', opcode=125, arg=1, argval='x', argrepr='x', offset=6, starts_line=None, is_jump_target=False),
        backport._Instruction(opname='LOAD_FAST', opcode=124, arg=1, argval='x', argrepr='x', offset=9, starts_line=None, is_jump_target=False),

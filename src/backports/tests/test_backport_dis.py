@@ -183,6 +183,23 @@ def test_method():
 
 
 @backport_dis_test
+def test_closure():
+    capture = 'backports.dis'
+    def function():
+        return capture
+    return function
+
+
+@backport_dis_test
+def test_closure_reference():
+    def function():
+        capture = 'backports.dis'
+        def inner():
+            return capture
+    return function
+
+
+@backport_dis_test
 def test_function():
     def function():
         return 0
@@ -374,14 +391,58 @@ Constants:
     actual = backport.code_info(source_code)
     expected = normalize(expected)
     actual = normalize(actual)
-    with open('a', 'w') as f: f.write(actual)
-    with open('e', 'w') as f: f.write(expected)
     assert actual == expected
 
 
 def test_code_info_type_error():
     with pytest.raises(TypeError):
         backport.code_info(math.pi)
+
+
+def test_code_info_closure():
+    capture = 'backports.dis'
+    def function():
+        return capture
+    file = __file__
+    expected = '''Name:              function
+Filename:          {file}
+Argument count:    0
+Number of locals:  0
+Stack size:        1
+Flags:             OPTIMIZED, NEWLOCALS, NESTED
+Constants:
+   0: None
+Free variables:
+   0: capture'''.format(**locals())
+    actual = backport.code_info(function)
+    assert actual == expected
+
+
+def test_code_info_closure_referenced():
+    def function():
+        capture = 'backports.dis'
+        def inner():
+            return capture
+    line = inspect.getframeinfo(inspect.currentframe()).lineno - 2
+    file = __file__
+    expected = '''Name:              function
+Filename:          {file}
+Argument count:    0
+Number of locals:  1
+Stack size:        2
+Flags:             OPTIMIZED, NEWLOCALS, NESTED
+Constants:
+   0: None
+   1: 'backports.dis'
+   2: <, file "{file}", line {line}>
+Variable names:
+   0: inner
+Cell variables:
+   0: capture'''.format(**locals())
+    actual = backport.code_info(function)
+    expected = normalize(expected)
+    actual = normalize(actual)
+    assert actual == expected
 
 
 def test_format_code_info():

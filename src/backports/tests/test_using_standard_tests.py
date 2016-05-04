@@ -115,8 +115,6 @@ class DisTests(unittest.TestCase):
         dis.dis(func)
         sys.stdout = save_stdout
         got = s.getvalue()
-        open('a' + func.__name__, 'w').write(got)
-        open('e' + func.__name__, 'w').write(expected)
         # Trim trailing blanks (if any).
         lines = got.split('\n')
         lines = [line.rstrip() for line in lines]

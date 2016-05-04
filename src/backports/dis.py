@@ -52,15 +52,15 @@ def dis(x=None, file=None):
     if hasattr(x, '__dict__'):  # Class or module
         items = sorted(x.__dict__.items())
         for name, x1 in items:
+            # removed try catch on TypeError, since we already check that
+            # x1 is an instance of something that has code
             if isinstance(x1, _have_code):
                 print("Disassembly of %s:" % name, file=file)
-                try:
-                    dis(x1, file=file)
-                except TypeError as msg:
-                    print("Sorry:", msg, file=file)
+                dis(x1, file=file)
                 print(file=file)
     elif hasattr(x, 'co_code'):  # Code object
         disassemble(x, file=file)
+    # TODO : ?
     # elif isinstance(x, (bytes, bytearray)):  # Raw bytecode
     #     _disassemble_bytes(x, file=file)
     elif isinstance(x, str):  # Source code

@@ -4,6 +4,7 @@ import inspect
 import types
 import math
 import re
+import contextlib
 from StringIO import StringIO
 import dis as original
 from functools import wraps
@@ -84,7 +85,7 @@ def get_original(object_to_test):
         if isinstance(object_to_test, types.GeneratorType):
             object_to_test = object_to_test.gi_frame.f_code
 
-        # disassembly of strings seems pretty broken in python2 just compile
+        # disassembling of strings seems pretty broken in python2 just compile
         # the string to a code object and compare the result
         if isinstance(object_to_test, str):
             object_to_test = compile(object_to_test, '<dis>', 'exec')
@@ -110,7 +111,7 @@ def normalize(output):
     """
     # remove any code object addresses which will be different between
     # expected and actual
-    regex = re.compile('code object function at (0x)?([0-9A-Fa-f]{8}|[0-9A-Fa-f]{16})')
+    regex = re.compile('code object function at (0x)?[0-9A-Fa-f]*')
     output = regex.sub('', output)
 
     # remove (<n> positional, <n> keyword pair) which is not supported in
@@ -170,8 +171,7 @@ def test_traceback():
     try:
         raise Exception()
     except:
-        exc_type, exc_value, exc_traceback = sys.exc_info()
-        return exc_traceback
+        return sys.exc_info()[2]
 
 
 @backport_dis_test
@@ -223,8 +223,45 @@ def test_source_code():
     return '''def function(): return 0'''
 
 
+@backport_dis_test
+def perform_last_traceback_test():
+    return None  # dis(None) is equivalent to sys.last_traceback
+
+
+@contextlib.contextmanager
+def set_last_traceback(value):
+    """
+    Temporarily set the last traceback value on sys, restoring upon exit.
+    If value is None then any existing value of last_traceback will be
+    deleted.
+
+    :param value: The new value of last_traceback to set (None to delete
+                  existing)
+    """
+    last = getattr(sys, 'last_traceback', None)
+    if value:
+        sys.last_traceback = value
+    elif last:
+        del sys.last_traceback
+    try:
+        yield
+    finally:
+        if last:
+            sys.last_traceback = last
+
+
 def test_last_traceback():
-    raise NotImplementedError()
+    try:
+        raise Exception()
+    except:
+        with set_last_traceback(sys.exc_info()[2]):
+            perform_last_traceback_test()
+
+
+def test_no_last_traceback():
+    with set_last_traceback(None):
+        with pytest.raises(RuntimeError):
+            perform_last_traceback_test()
 
 
 ############################# Test Misc Functions ##############################
@@ -272,10 +309,6 @@ def test_get_instructions():
 
 
 def test_with_extended_arg():
-    raise NotImplementedError()
-
-
-def test_no_last_traceback():
     raise NotImplementedError()
 
 

@@ -450,7 +450,27 @@ def test_format_code_info():
 
 
 def test_show_code():
-    raise NotImplementedError()
+    class Class:
+        def method(self):
+            return None
+    file = __file__
+    expected = '''Name:              method
+Filename:          {file}
+Argument count:    1
+Number of locals:  1
+Stack size:        1
+Flags:             OPTIMIZED, NEWLOCALS, NESTED, NOFREE
+Constants:
+   0: None
+Names:
+   0: None
+Variable names:
+   0: self
+'''.format(**locals())
+    stream = StringIO()
+    backport.show_code(Class.method, stream)
+    actual = stream.getvalue()
+    assert actual == expected
 
 
 def test_get_instructions():
@@ -466,6 +486,21 @@ def test_get_instructions():
        backport._Instruction(opname='JUMP_ABSOLUTE', opcode=113, arg=3, argval=3, argrepr='', offset=14, starts_line=None, is_jump_target=False),
        backport._Instruction(opname='LOAD_CONST', opcode=100, arg=0, argval=None, argrepr='None', offset=17, starts_line=None, is_jump_target=True),
        backport._Instruction(opname='RETURN_VALUE', opcode=83, arg=None, argval=None, argrepr='', offset=20, starts_line=None, is_jump_target=False),
+    ]
+    assert actual == expected
+
+
+def test_get_instructions_with_offset():
+    def function():
+        print(None)
+        return None
+    actual = list(backport.get_instructions(function, 999))
+    expected = [
+        backport._Instruction(opname='LOAD_CONST', opcode=100, arg=0, argval=None, argrepr='None', offset=0, starts_line=1000, is_jump_target=False),
+        backport._Instruction(opname='PRINT_ITEM', opcode=71, arg=None, argval=None, argrepr='', offset=3, starts_line=None, is_jump_target=False),
+        backport._Instruction(opname='PRINT_NEWLINE', opcode=72, arg=None, argval=None, argrepr='', offset=4, starts_line=None, is_jump_target=False),
+        backport._Instruction(opname='LOAD_CONST', opcode=100, arg=0, argval=None, argrepr='None', offset=5, starts_line=1001, is_jump_target=False),
+        backport._Instruction(opname='RETURN_VALUE', opcode=83, arg=None, argval=None, argrepr='', offset=8, starts_line=None, is_jump_target=False)
     ]
     assert actual == expected
 

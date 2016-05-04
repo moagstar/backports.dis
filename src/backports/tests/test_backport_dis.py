@@ -48,7 +48,7 @@ def dump_to_disk(test_function, actual, expected):
     :param expected: The result from the original dis module.
     """
     # change to if 1 to dump actual and expected output to disk
-    if 0:
+    if 1:
         with open(test_function.__name__ + '_actual', 'w') as a:
             a.write(actual)
         with open(test_function.__name__ + '_expected', 'w') as a:
@@ -272,6 +272,27 @@ def test_function_with_try():
             print('else')
         finally:
             print('finally')
+    return function
+
+
+@backport_dis_test
+def test_function_set_comprehension():
+    def function(container):
+        return { x for x in container }
+    return function
+
+
+@backport_dis_test
+def test_function_dict_comprehension():
+    def function(container):
+        return { x:x for x in container }
+    return function
+
+
+@backport_dis_test
+def test_function_list_comprehension():
+    def function(container):
+        return [x for x in container]
     return function
 
 

@@ -264,6 +264,7 @@ def test_no_last_traceback():
             perform_last_traceback_test()
 
 
+
 ############################# Test Misc Functions ##############################
 
 def test_unknown():
@@ -272,7 +273,9 @@ def test_unknown():
 
 
 def test_pretty_flags():
-    raise NotImplementedError()
+    assert backport.pretty_flags(1 | 4 | 32) == 'OPTIMIZED, VARARGS, GENERATOR'
+    assert backport.pretty_flags(512 | 2048) == '0x200, 0x800'
+    assert backport.pretty_flags(8589934592) == '0x200000000'  # 2^33
 
 
 def test_get_code_object():

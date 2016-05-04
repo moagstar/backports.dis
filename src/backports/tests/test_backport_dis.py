@@ -48,7 +48,7 @@ def dump_to_disk(test_function, actual, expected):
     :param expected: The result from the original dis module.
     """
     # change to if 1 to dump actual and expected output to disk
-    if 1:
+    if 0:
         with open(test_function.__name__ + '_actual', 'w') as a:
             a.write(actual)
         with open(test_function.__name__ + '_expected', 'w') as a:

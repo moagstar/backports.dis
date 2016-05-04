@@ -110,7 +110,7 @@ def normalize(output):
     """
     # remove any code object addresses which will be different between
     # expected and actual
-    regex = re.compile('code object function at [0-9A-F]{8}')
+    regex = re.compile('code object function at (0x)?([0-9A-Fa-f]{8}|[0-9A-Fa-f]{16})')
     output = regex.sub('', output)
 
     # remove (<n> positional, <n> keyword pair) which is not supported in

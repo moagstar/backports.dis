@@ -588,29 +588,6 @@ def test_with_extended_arg():
     raise NotImplementedError()
 
 
-############################# Test Bytecode Class ##############################
-
-class TestBytecode():
-
-    def test_construct(self):
-        raise NotImplementedError()
-
-    def test_iterate(self):
-        raise NotImplementedError()
-
-    def test_repr(self):
-        raise NotImplementedError()
-
-    def test_from_traceback(self):
-        raise NotImplementedError()
-
-    def test_info(self):
-        raise NotImplementedError()
-
-    def test_dis(self):
-        raise NotImplementedError()
-
-
 ################################# Test Program #################################
 
 def test_program():

@@ -876,7 +876,17 @@ class BytecodeTests(BytecodeTestCase):
 
         self.assertEqual(b.current_offset, tb.tb_lasti)
 
+    def test_from_traceback_with_tb_next(self):
+        raise NotImplementedError()
+
     def test_from_traceback_dis(self):
         tb = get_tb()
         b = dis.Bytecode.from_traceback(tb)
         self.assertEqual(b.dis(), dis_traceback)
+
+    def test_repr(self):
+        raise NotImplementedError()
+
+
+if __name__ == '__main__':
+    unittest.main()
